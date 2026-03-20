@@ -1,0 +1,35 @@
+
+one = S Z
+
+add Z n = n
+add (S m) n = S(add m n)
+main = add one Z
+-- {add one Z}
+-- {add one} Z
+-- {add} one Z
+-- >> add Z n = n
+-- >> Z =?= one
+-- one
+-- S Z
+-- --fail--
+-- >> add (S m) n = S (add m n)
+-- >> (S m) =?= one
+-- one
+-- S Z
+-- m := Z
+-- >> n =?= Z
+-- n := Z
+-- {S (add Z Z)}
+-- {S} (add Z Z)
+-- fail.
+-- S {add Z Z}
+-- S ({add Z} Z)
+-- S ({add} Z Z)
+-- >> add Z n = n
+-- >> Z =?= Z
+-- true.
+-- >> n =?= Z
+-- n := Z
+-- S (Z)
+
+

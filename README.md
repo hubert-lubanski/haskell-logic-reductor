@@ -1,23 +1,69 @@
-# Combinatory Logic Term Rewriter & Backtracking Evaluator
-**Non-deterministic AST Reduction via Custom Monad Transformers and Generic Zippers**
+# Reductor
+### Użycie
+```
+Reductor file [-s|--search] [-v|--verbose INT] [--no-color] 
+                [-d|--depth DEPTH]
+```
+## Opis
+Rozwiązanie korzysta z monady `logict` - obliczeń z nawrotami (*jak w programowniu w logice*).
 
-This repository contains an advanced functional term rewriting engine implemented in Haskell. It reduces complex combinatory logic expressions and executes pattern matching by utilizing a non-deterministic, backtracking search algorithm.
+Dostępnych jest kilka możliwości wypisywania wyjścia, domyślnie wypisywane są kroki realnie zastosowanych podstawień.
 
-## Architectural Highlights
-This project serves as a demonstration of high-level functional programming patterns, category theory applications, and immutable data structure design.
+Możliwe jest wypisywanie pośrednich kroków redukcji za pomocą opcji `--verbose 1`, typu:
+``` haskell
+{add two two}
+{add two} two
+{add} two two
+...
+```
+Jak również możliwe jest odnotowywanie dokładnych kroków redukcji wymuszonych, w tym samego sprawdzenia wzorca (opcja `--verbose 2`):
+``` hs
+{add} two two
+add {two} two
+add {S (S Z)} two
+add ({S} (S Z)) two
+...
+```
+### Drzewo poszukiwań
+Jak przystało na dobry program z nawrotami, możliwe jest obejrzenie całego procesu *poszukiwań* rozwiązania.
 
-* **Heavy Monad Transformer Stack:** The core evaluation engine runs on a deeply nested monad stack: `ZipperT TreeMoves Expr (StateT ReductionState (LogicT IO))`. This cleanly separates side-effects: AST navigation (`ZipperT`), reduction history and depth tracking (`StateT`), and Prolog-like non-deterministic backtracking execution (`LogicT`).
-* **Generic Huet's Zipper Implementation:** Developed a fully generic set of typeclasses (`Walkable`, `Zippable`, `Unzippable`) to implement Huet's Zipper. This allows for purely functional, O(1) in-place mutations and deep navigation of the Abstract Syntax Tree without the overhead of full tree reconstruction.
-* **Non-deterministic Pattern Matching:** The reduction strategy (`reduceTo`, `checkPattern`) leverages the `Alternative` typeclass (`<|>`) to explore multiple reduction paths. When an irreversible reduction attempt fails, the engine seamlessly backtracks the entire virtual state to the last valid branch point.
-* **Robust CLI:** Integrates `optparse-applicative` for comprehensive execution control, including maximum depth limiters, verbosity levels, and complete search path visualization.
+Za pomocą opcji `--search` możemy włączyć wypiswanie **wszystkich-wszystkich** kroków redukcji:
+```
+goal: reduce add two two
+{add two two}
+{add two} two
+{add} two two
+goal: add [Z*,n] -> n
+goal: Z* == two
+goal: Forced reduction to Z
+add {two} two
+goal: two -> S (S Z)
+success. (two -> S (S Z))
+add {S (S Z)} two
+fail. (Forced reduction to Z)
+redo.
+goal: add [S (m),n] -> S (add m n)
+goal: S (m) == two
+goal: Forced reduction to S
+add {two} two
+goal: two -> S (S Z)
+success. (two -> S (S Z))
+add {S (S Z)} two
+add ({S} (S Z)) two
+success. (Forced reduction to S)
+```
 
-## Theoretical Debt & Architectural Trade-offs
-As an academic exploration of semantics and term rewriting, the implementation makes several strict theoretical trade-offs:
+### Kolorowe wyjście
+Domyślnie program używa kolorowego wyjścia (nieoptymalnie zaimplementowanewgo, ale... :)) przy użyciu `ANSI ESC Codes`.
 
-* **Combinatorial Explosion (LogicT Overhead):** The non-deterministic search operates purely on abstract syntax trees rather than Directed Acyclic Graphs (DAGs). Because the `LogicT` monad does not natively support sharing or memoization across backtracking branches, shared subexpressions are re-evaluated multiple times. The evaluation strategy is tree-based rather than graph-based, leading to exponential time complexity overhead on highly divergent reduction paths.
-* **Mathematical Impurity (Partial Functions):** The AST translation layer relies on partial functions (`unexpectedValue` invoking hard exceptions) when mapping unsupported or malformed syntax. In strict type theory, this violates the principle of totality. A fully rigorous mathematical model would encapsulate all invalid states within an `ExceptT` or `Either` monad to formally prove behavior over the entire input domain.
+* Kolorem niebieskim zaznaczane są aktualne elementy wyrażenia rozważane w redukcji.
+* Kolorem żółtym zaznacze są elementy wyrażenia rozważane w *redukcji wymuszonej* (przez dopasowywanie do wzorca).
+* Kolorem zielonym zaznaczone są elementy wyrażenia *pasującego konstruktora*
 
-## Tech Stack
-* **Language:** Haskell (GHC)
-* **Core Paradigms:** Monad Transformers, Logic Programming (Backtracking), Term Rewriting.
-* **Libraries:** `logict`, `optparse-applicative`, `haskell-src`, `mtl`.
+Gdyby ten charakter wyjścia stwarzał problemy, możemy wyłączyć kolory opcją `--no-color`.
+
+Disclaimer: *Ścieżka poszkiwań jest zawsze wyświetlana z uzyciem kolorów*
+
+### Opcje
+Wszystkie opcje można poznać korzystając z opcji `--help`.
+

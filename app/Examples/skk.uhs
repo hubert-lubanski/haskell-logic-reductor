@@ -1,0 +1,5 @@
+s x y z = x z (y z)
+k x y = x
+main = s k k x
+-- k x (k x)
+-- x

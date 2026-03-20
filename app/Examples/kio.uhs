@@ -1,0 +1,11 @@
+s x y z = x z (y z)
+k x y = x
+i = s k k
+om x = x x
+omega = om om
+main = k i omega 0
+-- k i omega 0
+-- i 0
+-- s k k 0
+-- k 0 (k 0)
+-- 0
